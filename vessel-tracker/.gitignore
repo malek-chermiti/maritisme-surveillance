@@ -1,0 +1,23 @@
+# Environnement Python
+.venv/
+env/
+__pycache__/
+*.py[cod]
+
+# Fichiers d'environnement et clés
+.env
+.env.*
+
+# Modèles IA lourds (Scikit-Learn / PyTorch / TensorFlow)
+*.pkl
+*.joblib
+*.h5
+
+# Base de données locale & Logs
+*.log
+*.sqlite3
+
+# Fichiers système et IDE
+.DS_Store
+.vscode/
+.idea/
