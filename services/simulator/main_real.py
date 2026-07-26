@@ -44,7 +44,7 @@ async def stream_real_ships():
 
     async with websockets.connect(AISSTREAM_URL) as ws:
         subscribe_message = {
-            "Apikey": AISSTREAM_API_KEY,
+            "APIKey": AISSTREAM_API_KEY,
             "BoundingBoxes": bounding_box,
             "FilterMessageTypes": ["PositionReport"]
         }
@@ -52,6 +52,7 @@ async def stream_real_ships():
         print("Abonne au flux AISStream (DONNEES REELLES). En attente...")
 
         async for message_json in ws:
+            print("RAW:", message_json[:300])
             message = json.loads(message_json)
 
             if message.get("MessageType") == "PositionReport":

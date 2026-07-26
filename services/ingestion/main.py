@@ -1,11 +1,15 @@
 import threading
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 
 from controller import router as vessel_router
 from kafka_consumer import start_kafka_consumer
+from security.internal_auth import verify_internal_secret
 
-app = FastAPI(title="Ingestion Service")
+app = FastAPI(
+    title="Ingestion Service",
+    dependencies=[Depends(verify_internal_secret)]
+)
 
 app.include_router(vessel_router)
 
