@@ -1,14 +1,20 @@
 import os
 import secrets
+from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import Header, HTTPException, status
 
-load_dotenv()
+# services/alert/security/internal_auth.py
+# security/ -> alert/ -> services/ -> racine
+env_path = Path(__file__).resolve().parent.parent.parent.parent / ".env"
+load_dotenv(dotenv_path=env_path)
 
 INTERNAL_SECRET = os.getenv("INTERNAL_SECRET")
 
 if not INTERNAL_SECRET:
-    raise RuntimeError("INTERNAL_SECRET n'est pas défini dans l'environnement")
+    raise RuntimeError(
+        f"INTERNAL_SECRET n'est pas défini. Fichier cherché : {env_path} (existe: {env_path.exists()})"
+    )
 
 
 async def verify_internal_secret(
