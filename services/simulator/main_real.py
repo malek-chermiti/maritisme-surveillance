@@ -37,10 +37,7 @@ async def stream_real_ships():
         value_serializer=lambda v: json.dumps(v).encode("utf-8")
     )
 
-    bounding_box = [[
-        [zone["lat_min"], zone["lon_min"]],
-        [zone["lat_max"], zone["lon_max"]]
-    ]]
+    bounding_box = [[[-90, -180], [90, 180]]] 
 
     async with websockets.connect(AISSTREAM_URL) as ws:
         subscribe_message = {
