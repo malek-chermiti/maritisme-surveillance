@@ -1,0 +1,29 @@
+import os
+from datetime import datetime, timedelta, timezone
+from jose import jwt, JWTError
+
+JWT_SECRET = os.getenv("JWT_SECRET")
+JWT_ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 15
+REFRESH_TOKEN_EXPIRE_DAYS = 7
+
+
+def create_token(user_id: int, expires_delta: timedelta, token_type: str) -> str:
+    expire = datetime.now(timezone.utc) + expires_delta
+    payload = {"sub": str(user_id), "type": token_type, "exp": expire}
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+
+def create_access_token(user_id: int) -> str:
+    return create_token(user_id, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES), "access")
+
+
+def create_refresh_token(user_id: int) -> str:
+    return create_token(user_id, timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS), "refresh")
+
+
+def decode_token(token: str) -> dict:
+    try:
+        return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+    except JWTError:
+        return None
