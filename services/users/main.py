@@ -1,13 +1,25 @@
-from fastapi import Depends, FastAPI
+import os
+import sys
 
-from security.internal_auth import verify_internal_secret
+from fastapi import FastAPI
+
+try:
+    from .security.internal_auth import verify_internal_secret
+    from .controller import router as users_router
+except ImportError:
+    sys.path.insert(0, os.path.dirname(__file__))
+    from security.internal_auth import verify_internal_secret
+    from controller import router as users_router
 
 app = FastAPI(
-    title="Auth Service",
-    dependencies=[Depends(verify_internal_secret)]
+    title="Users Service",
+    description="Service de gestion des utilisateurs (CRUD)",
+    version="1.0.0",
 )
 
+app.include_router(users_router)
 
-@app.get("/health")
-def health_check():
-    return {"status": "ok", "service": "auth-service"}
+
+@app.get("/", tags=["Health"])
+def health():
+    return {"service": "users", "status": "online"}

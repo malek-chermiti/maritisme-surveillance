@@ -35,6 +35,7 @@ if not INTERNAL_SECRET:
 
 # 🌐 Registre des microservices
 SERVICES = {
+     "users": "http://localhost:8005", 
     "auth": "http://localhost:8004",
     "ingestion": "http://localhost:8001",
     "prediction": "http://localhost:8002",
