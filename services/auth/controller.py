@@ -68,7 +68,7 @@ async def login(payload: LoginRequest):
         "user_id": user["id"]
     }
 
-
+"""dm1 tekho token a travers request """
 @router.post("/validate")
 def validate(authorization: str = Header(...)):
     """Valide un access_token et retourne l'user_id décodé du JWT."""
