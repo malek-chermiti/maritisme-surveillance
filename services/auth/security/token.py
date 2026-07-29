@@ -1,11 +1,23 @@
 import os
+from pathlib import Path
 from datetime import datetime, timedelta, timezone
+
+from dotenv import load_dotenv
 from jose import jwt, JWTError
+
+# services/auth/security/token.py -> security/ -> auth/ -> services/ -> racine
+env_path = Path(__file__).resolve().parent.parent.parent.parent / ".env"
+load_dotenv(dotenv_path=env_path)
 
 JWT_SECRET = os.getenv("JWT_SECRET")
 JWT_ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 15
 REFRESH_TOKEN_EXPIRE_DAYS = 7
+
+if not JWT_SECRET:
+    raise RuntimeError(
+        f"JWT_SECRET n'est pas défini. Fichier cherché : {env_path} (existe: {env_path.exists()})"
+    )
 
 
 def create_token(user_id: int, expires_delta: timedelta, token_type: str) -> str:

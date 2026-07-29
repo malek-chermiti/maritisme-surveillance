@@ -54,7 +54,7 @@ async def gateway_proxy(service_name: str, path: str, request: Request):
         )
 
     target_url = f"{SERVICES[service_name]}/{path}"
-
+#header {key= authorisation} lil service taa auth 
     # 🔐 Injection du secret interne (écrase toute valeur venant du client)
     forwarded_headers = dict(request.headers)
     forwarded_headers.pop("host", None)

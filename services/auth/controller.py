@@ -1,16 +1,33 @@
 import os
+from pathlib import Path
+
 import httpx
-from datetime import datetime, timezone
+from dotenv import load_dotenv
 from fastapi import APIRouter, HTTPException, Header
 from passlib.context import CryptContext
 from pydantic import BaseModel
-from security import create_access_token, create_refresh_token, decode_token, ACCESS_TOKEN_EXPIRE_MINUTES
+
+from security.token import (
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+    ACCESS_TOKEN_EXPIRE_MINUTES
+)
+
+# services/auth/controller.py -> .parent (auth) -> .parent (services) -> .parent (racine)
+env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+load_dotenv(dotenv_path=env_path)
 
 router = APIRouter()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 INTERNAL_SECRET = os.getenv("INTERNAL_SECRET")
 USERS_SERVICE_URL = os.getenv("USERS_SERVICE_URL", "http://localhost:8005")
+
+if not INTERNAL_SECRET:
+    raise RuntimeError(
+        f"INTERNAL_SECRET n'est pas défini. Fichier cherché : {env_path} (existe: {env_path.exists()})"
+    )
 
 
 class LoginRequest(BaseModel):
@@ -24,6 +41,7 @@ class RefreshRequest(BaseModel):
 
 @router.post("/login")
 async def login(payload: LoginRequest):
+    """Vérifie les credentials via users-service, puis génère les tokens."""
     async with httpx.AsyncClient() as client:
         response = await client.get(
             f"{USERS_SERVICE_URL}/internal/users/credentials",
@@ -32,12 +50,12 @@ async def login(payload: LoginRequest):
         )
 
     if response.status_code != 200:
-        raise HTTPException(401, "Email ou mot de passe incorrect")
+        raise HTTPException(status_code=401, detail="Email ou mot de passe incorrect")
 
     user = response.json()
 
     if not pwd_context.verify(payload.password, user["password_hash"]):
-        raise HTTPException(401, "Email ou mot de passe incorrect")
+        raise HTTPException(status_code=401, detail="Email ou mot de passe incorrect")
 
     access_token = create_access_token(user["id"])
     refresh_token = create_refresh_token(user["id"])
@@ -53,16 +71,14 @@ async def login(payload: LoginRequest):
 
 @router.post("/validate")
 def validate(authorization: str = Header(...)):
-    """Valide un access_token et retourne l'objet user (décodé du JWT)."""
+    """Valide un access_token et retourne l'user_id décodé du JWT."""
     token = authorization.removeprefix("Bearer ").strip()
     payload = decode_token(token)
 
     if payload is None or payload.get("type") != "access":
-        raise HTTPException(401, "Token invalide ou expiré")
+        raise HTTPException(status_code=401, detail="Token invalide ou expiré")
 
     return {"user_id": int(payload["sub"])}
-#il injecte le id de user dans chaque req necessite un id_user pour user de 
-# id x ne permet update le profile d'update user de id y
 
 
 @router.post("/refresh")
@@ -71,7 +87,7 @@ def refresh(payload: RefreshRequest):
     decoded = decode_token(payload.refresh_token)
 
     if decoded is None or decoded.get("type") != "refresh":
-        raise HTTPException(401, "Refresh token invalide ou expiré")
+        raise HTTPException(status_code=401, detail="Refresh token invalide ou expiré")
 
     user_id = int(decoded["sub"])
     new_access_token = create_access_token(user_id)
