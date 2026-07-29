@@ -3,7 +3,7 @@ from pathlib import Path
 
 import httpx
 from dotenv import load_dotenv
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, HTTPException
 from passlib.context import CryptContext
 from pydantic import BaseModel
 
@@ -39,6 +39,10 @@ class RefreshRequest(BaseModel):
     refresh_token: str
 
 
+class ValidateRequest(BaseModel):
+    token: str
+
+
 @router.post("/login")
 async def login(payload: LoginRequest):
     """Vérifie les credentials via users-service, puis génère les tokens."""
@@ -68,17 +72,16 @@ async def login(payload: LoginRequest):
         "user_id": user["id"]
     }
 
-"""dm1 tekho token a travers request """
-@router.post("/validate")
-def validate(authorization: str = Header(...)):
-    """Valide un access_token et retourne l'user_id décodé du JWT."""
-    token = authorization.removeprefix("Bearer ").strip()
-    payload = decode_token(token)
 
-    if payload is None or payload.get("type") != "access":
+@router.post("/validate")
+def validate(payload: ValidateRequest):
+    """Valide un access_token reçu dans le body et retourne l'user_id décodé."""
+    decoded = decode_token(payload.token)
+
+    if decoded is None or decoded.get("type") != "access":
         raise HTTPException(status_code=401, detail="Token invalide ou expiré")
 
-    return {"user_id": int(payload["sub"])}
+    return {"user_id": int(decoded["sub"])}
 
 
 @router.post("/refresh")

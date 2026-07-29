@@ -1,4 +1,5 @@
 import os
+import json
 from pathlib import Path
 
 import httpx
@@ -7,7 +8,6 @@ from fastapi import FastAPI, Request, Response, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 
 # 📁 Charge le .env global situé à la racine du projet
-# services/gateway/main.py -> .parent (gateway) -> .parent (services) -> .parent (racine)
 env_path = Path(__file__).resolve().parent.parent.parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
@@ -25,7 +25,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 🔐 Secrets
 INTERNAL_SECRET = os.getenv("INTERNAL_SECRET")
 
 if not INTERNAL_SECRET:
@@ -33,19 +32,31 @@ if not INTERNAL_SECRET:
         f"INTERNAL_SECRET n'est pas défini. Fichier .env recherché ici : {env_path} (existe: {env_path.exists()})"
     )
 
-# 🌐 Registre des microservices
 SERVICES = {
-     "users": "http://localhost:8005", 
+    "users": "http://localhost:8005",
     "auth": "http://localhost:8004",
     "ingestion": "http://localhost:8001",
     "prediction": "http://localhost:8002",
     "alert": "http://localhost:8003"
 }
 
+AUTH_SERVICE_URL = SERVICES["auth"]
+
+# 🔓 Routes qui ne nécessitent PAS de JWT
+PUBLIC_ROUTES = [
+    "/api/auth/login",
+    "/api/users/users",   # POST /users -> création de compte
+]
+
+
 @app.api_route("/api/{service_name}/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
 async def gateway_proxy(service_name: str, path: str, request: Request):
     """
-    Proxy inverse : injecte le secret interne, puis redirige vers le microservice.
+    Proxy inverse :
+    - Bloque l'accès public aux routes internes (/internal/...)
+    - Valide le JWT via auth-service (token attendu dans le body : {"token": "..."})
+    - Injecte le secret interne
+    - Redirige vers le microservice cible
     """
     if service_name not in SERVICES:
         raise HTTPException(
@@ -53,9 +64,62 @@ async def gateway_proxy(service_name: str, path: str, request: Request):
             detail=f"Le service '{service_name}' est inconnu."
         )
 
+    full_path = f"/api/{service_name}/{path}"
+
+    # 🚫 Bloque l'accès public aux routes internes
+    if path.startswith("internal/"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Accès interdit à cette route interne."
+        )
+
+    # Lit le body brut une seule fois (on le réutilisera pour le transfert)
+    raw_body = await request.body()
+
+    # 🛡️ Vérification JWT via auth-service (sauf routes publiques)
+    if full_path not in PUBLIC_ROUTES:
+        if not raw_body:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token manquant dans le body de la requête."
+            )
+
+        try:
+            body_json = json.loads(raw_body)
+        except json.JSONDecodeError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Body invalide, JSON attendu."
+            )
+
+        token = body_json.get("token")
+        if not token:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Champ 'token' manquant dans le body."
+            )
+
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            try:
+                validate_response = await client.post(
+                    f"{AUTH_SERVICE_URL}/validate",
+                    json={"token": token}
+                )
+            except httpx.RequestError:
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="Le service d'authentification est actuellement injoignable."
+                )
+
+        if validate_response.status_code != 200:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token invalide ou expiré."
+            )
+
     target_url = f"{SERVICES[service_name]}/{path}"
-#header {key= authorisation} lil service taa auth 
-    # 🔐 Injection du secret interne (écrase toute valeur venant du client)
+
+    # 🔐 Injection du secret interne
     forwarded_headers = dict(request.headers)
     forwarded_headers.pop("host", None)
     forwarded_headers.pop("content-length", None)
@@ -68,7 +132,7 @@ async def gateway_proxy(service_name: str, path: str, request: Request):
                 url=target_url,
                 headers=forwarded_headers,
                 params=request.query_params,
-                content=await request.body()
+                content=raw_body   # 👈 réutilise le body déjà lu, pas de re-lecture
             )
             return Response(
                 content=response.content,

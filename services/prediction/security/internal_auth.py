@@ -27,11 +27,11 @@ async def verify_internal_secret(
     if x_internal_secret is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Header X-Internal-Secret manquant",
+            detail="Accès refusé : header X-Internal-Secret manquant",
         )
 
     if not secrets.compare_digest(x_internal_secret, INTERNAL_SECRET):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Secret interne invalide",
+            detail="Accès refusé : secret interne invalide",
         )

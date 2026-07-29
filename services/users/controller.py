@@ -20,13 +20,13 @@ router = APIRouter()
 # --- CRUD classique ---
 @router.post("/users", response_model=schemas.UserOut)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db), _: None = Depends(verify_internal_secret)):
-    return service.create_user(db, user)#internel secret
+    return service.create_user(db, user)
 
 @router.get("/users/{user_id}", response_model=schemas.UserOut)
 def get_user(user_id: int, db: Session = Depends(get_db), _: None = Depends(verify_internal_secret)):
     user = service.get_user(db, user_id)
     if not user:
-        raise HTTPException(404, "User introuvable")
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable : identifiant utilisateur inexistant")
     return user
 
 @router.put("/users/{user_id}", response_model=schemas.UserOut)
@@ -48,7 +48,7 @@ def list_users(db: Session = Depends(get_db), _: None = Depends(verify_internal_
 def get_credentials(email: str, db: Session = Depends(get_db), _: None = Depends(verify_internal_secret)):
     user = service.get_user_by_email(db, email)
     if not user:
-        raise HTTPException(404, "Utilisateur introuvable")
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable : email non trouvé")
     return {
         "id": user.id,
         "username": user.username,
