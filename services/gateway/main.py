@@ -1,10 +1,14 @@
 import os
+import sys
 from pathlib import Path
 
 import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, Response, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "infrastructure"))
+from consul.consul_registration import register_service
 
 # 📁 Charge le .env global situé à la racine du projet
 env_path = Path(__file__).resolve().parent.parent.parent / ".env"
@@ -15,6 +19,8 @@ app = FastAPI(
     description="Point d'entrée unique et sécurisé pour les microservices",
     version="1.0.0"
 )
+
+register_service(app, service_name="gateway-service", service_port=8000)
 
 app.add_middleware(
     CORSMiddleware,
