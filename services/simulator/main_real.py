@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import time
 
 import websockets
 from kafka import KafkaProducer
@@ -37,7 +38,9 @@ async def stream_real_ships():
         value_serializer=lambda v: json.dumps(v).encode("utf-8")
     )
 
-    bounding_box = [[[-90, -180], [90, 180]]] 
+    bounding_box = [[[-90, -180], [90, 180]]]
+
+    last_sent_time = 0  # 👈 timestamp du dernier envoi
 
     async with websockets.connect(AISSTREAM_URL) as ws:
         subscribe_message = {
@@ -46,13 +49,18 @@ async def stream_real_ships():
             "FilterMessageTypes": ["PositionReport"]
         }
         await ws.send(json.dumps(subscribe_message))
-        print("Abonne au flux AISStream (DONNEES REELLES). En attente...")
+        print("Abonne au flux AISStream (DONNEES REELLES). Un seul navire toutes les 30s...")
 
         async for message_json in ws:
-            print("RAW:", message_json[:300])
             message = json.loads(message_json)
 
             if message.get("MessageType") == "PositionReport":
+                now = time.time()
+
+                # Ignore les messages reçus avant que 30s ne se soient écoulées
+                if now - last_sent_time < 30:
+                    continue
+
                 report = message["Message"]["PositionReport"]
 
                 vessel_data = {
@@ -64,7 +72,10 @@ async def stream_real_ships():
                 }
 
                 producer.send(KAFKA_TOPIC, value=vessel_data)
+                producer.flush()
                 print("Navire reel recu :", vessel_data)
+
+                last_sent_time = now
 
 
 if __name__ == "__main__":

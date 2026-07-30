@@ -1,4 +1,3 @@
-
 import json
 import random
 import time
@@ -77,23 +76,28 @@ def main():
         value_serializer=lambda v: json.dumps(v).encode("utf-8")
     )
 
-    print("Simulateur connecte a Kafka. Envoi des positions toutes les 5 secondes...")
+    print("Simulateur connecte a Kafka. Un seul navire envoye toutes les 30 secondes...")
+
+    index = 0  # 👈 pointeur pour tourner entre les navires
 
     try:
         while True:
-            for vessel in VESSELS:
-                speed = move_vessel(vessel, zone)
-                message = {
-                    "mmsi": vessel["mmsi"],
-                    "lat": round(vessel["lat"], 6),
-                    "lon": round(vessel["lon"], 6),
-                    "speed": speed,
-                    "heading": round(vessel["heading"], 2)
-                }
-                producer.send(KAFKA_TOPIC, value=message)
-                print("Envoye (MOCK) :", message)
+            vessel = VESSELS[index % len(VESSELS)]  # sélectionne un seul navire à la fois
+            speed = move_vessel(vessel, zone)
+
+            message = {
+                "mmsi": vessel["mmsi"],
+                "lat": round(vessel["lat"], 6),
+                "lon": round(vessel["lon"], 6),
+                "speed": speed,
+                "heading": round(vessel["heading"], 2)
+            }
+            producer.send(KAFKA_TOPIC, value=message)
             producer.flush()
-            time.sleep(5)
+            print("Envoye (MOCK) :", message)
+
+            index += 1
+            time.sleep(30)  # 👈 30 secondes entre chaque envoi
     except KeyboardInterrupt:
         print("Arret du simulateur.")
     finally:
