@@ -1,5 +1,4 @@
 import os
-import json
 from pathlib import Path
 
 import httpx
@@ -78,25 +77,24 @@ async def gateway_proxy(service_name: str, path: str, request: Request):
 
     # 🛡️ Vérification JWT via auth-service (sauf routes publiques)
     if full_path not in PUBLIC_ROUTES:
-        if not raw_body:
+        authorization_header = request.headers.get("authorization")
+        if not authorization_header:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token manquant dans le body de la requête."
+                detail="Header Authorization manquant."
             )
 
-        try:
-            body_json = json.loads(raw_body)
-        except json.JSONDecodeError:
+        if not authorization_header.startswith("Bearer "):
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Body invalide, JSON attendu."
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Format Authorization invalide. Utilisez 'Bearer <token>'."
             )
 
-        token = body_json.get("token")
+        token = authorization_header.removeprefix("Bearer ").strip()
         if not token:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Champ 'token' manquant dans le body."
+                detail="Token manquant dans le header Authorization."
             )
 
         async with httpx.AsyncClient(timeout=10.0) as client:

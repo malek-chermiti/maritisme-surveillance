@@ -67,7 +67,7 @@ async def login(payload: LoginRequest):
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
-        "token_type": "bearer",
+        "token_type": "Bearer",
         "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         "user_id": user["id"]
     }
