@@ -150,6 +150,6 @@ async def gateway_proxy(service_name: str, path: str, request: Request):
             )
 
 
-@app.get("/", tags=["Health"])
+@app.get("/health", tags=["Health"])
 def gateway_health():
     return {"gateway": "online", "status": "active"}

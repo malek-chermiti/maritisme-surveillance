@@ -15,6 +15,12 @@ load_dotenv()
 KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
 KAFKA_TOPIC = os.getenv("KAFKA_TOPIC", "vessel-gps")
 
+# Intervalle entre chaque publication d'UN SEUL navire
+PUBLISH_INTERVAL_SECONDS = 10
+
+# Relit la zone active depuis la DB toutes les N publications
+ZONE_REFRESH_EVERY_N_TICKS = 6  # ~1min si PUBLISH_INTERVAL_SECONDS = 10
+
 VESSELS = [
     {"mmsi": 672123456, "lat": None, "lon": None, "heading": random.uniform(0, 360)},
     {"mmsi": 672123457, "lat": None, "lon": None, "heading": random.uniform(0, 360)},
@@ -76,13 +82,22 @@ def main():
         value_serializer=lambda v: json.dumps(v).encode("utf-8")
     )
 
-    print("Simulateur connecte a Kafka. Un seul navire envoye toutes les 30 secondes...")
+    print(f"Simulateur connecte a Kafka. Un seul navire envoye toutes les {PUBLISH_INTERVAL_SECONDS}s...")
 
-    index = 0  # 👈 pointeur pour tourner entre les navires
+    index = 0
+    zone_refresh_counter = 0
 
     try:
         while True:
-            vessel = VESSELS[index % len(VESSELS)]  # sélectionne un seul navire à la fois
+            # 🔄 Relit périodiquement la zone active depuis la DB
+            if zone_refresh_counter >= ZONE_REFRESH_EVERY_N_TICKS:
+                new_zone = get_active_zone()
+                if new_zone != zone:
+                    print("⚠️ Zone mise a jour par l'operateur :", new_zone)
+                    zone = new_zone
+                zone_refresh_counter = 0
+
+            vessel = VESSELS[index % len(VESSELS)]
             speed = move_vessel(vessel, zone)
 
             message = {
@@ -97,7 +112,8 @@ def main():
             print("Envoye (MOCK) :", message)
 
             index += 1
-            time.sleep(30)  # 👈 30 secondes entre chaque envoi
+            zone_refresh_counter += 1
+            time.sleep(PUBLISH_INTERVAL_SECONDS)
     except KeyboardInterrupt:
         print("Arret du simulateur.")
     finally:
