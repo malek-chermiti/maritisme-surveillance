@@ -29,6 +29,6 @@ register_service(app, service_name="users-service", service_port=8005)
 app.include_router(users_router)
 
 
-@app.get("/", tags=["Health"])
+@app.get("/health", tags=["Health"])
 def health():
     return {"service": "users", "status": "online"}
