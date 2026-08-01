@@ -41,7 +41,7 @@ async def fetch_history(mmsi: int) -> list[dict]:
     async with httpx.AsyncClient(timeout=10.0) as client:
         try:
             response = await client.get(
-                f"{INGESTION_SERVICE_URL}/{mmsi}/history",
+                f"{INGESTION_SERVICE_URL}/vessels/{mmsi}/history",
                 params={"limit": 3},
                 headers={"X-Internal-Secret": INTERNAL_SECRET}
             )
@@ -59,7 +59,7 @@ async def fetch_history(mmsi: int) -> list[dict]:
 
 
 def save_prediction(db: Session, mmsi: int, pred_lat: float, pred_lon: float, anomaly_score: float):
-    log = models.PredictionLog(
+    log = models.PredictionsLog(  # 👈 Correction ici (PredictionsLog au lieu de PredictionLog)
         mmsi=mmsi,
         pred_latitude=pred_lat,
         pred_longitude=pred_lon,
@@ -96,9 +96,9 @@ async def notify_alert_service(mmsi: int, pred_lat: float, pred_lon: float, anom
 
 def list_predictions_by_mmsi(db: Session, mmsi: int, limit: int = 10):
     return (
-        db.query(models.PredictionLog)
-        .filter(models.PredictionLog.mmsi == mmsi)
-        .order_by(models.PredictionLog.created_at.desc())
+        db.query(models.PredictionsLog)  # 👈 Correction ici aussi pour l'historique
+        .filter(models.PredictionsLog.mmsi == mmsi)
+        .order_by(models.PredictionsLog.created_at.desc())
         .limit(limit)
         .all()
     )
