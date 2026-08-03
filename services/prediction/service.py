@@ -117,16 +117,16 @@ async def predict_and_process(db: Session, mmsi: int):
     features = build_features(history)
     prediction = model.predict(features)[0]
 
-    pred_lat = round(float(prediction[0]), 6)
-    pred_lon = round(float(prediction[1]), 6)
+    predicted_lat_t30 = round(float(prediction[0]), 6)
+    predicted_lon_t30 = round(float(prediction[1]), 6)
     anomaly_score = round(float(prediction[2]), 3)
 
-    save_prediction(db, mmsi, pred_lat, pred_lon, anomaly_score)
-    await notify_alert_service(mmsi, pred_lat, pred_lon, anomaly_score)
+    save_prediction(db, mmsi, predicted_lat_t30, predicted_lon_t30, anomaly_score)
+    await notify_alert_service(mmsi, predicted_lat_t30, predicted_lat_t30, anomaly_score)
 
     return {
         "mmsi": mmsi,
-        "predicted_lat_t30": pred_lat,
-        "predicted_lon_t30": pred_lon,
+        "predicted_lat_t30": predicted_lat_t30,
+        "predicted_lon_t30": predicted_lon_t30,
         "anomaly_score": anomaly_score
     }
