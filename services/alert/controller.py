@@ -17,7 +17,11 @@ def evaluate(payload: schemas.EvaluateRequest, db: Session = Depends(get_db)):
     intrusion et/ou dégazage, et sauvegarde une alerte si un seuil est dépassé.
     """
     return evaluate_prediction(
-        db, payload.mmsi, payload.pred_latitude, payload.pred_longitude, payload.anomaly_score
+        db,
+        payload.mmsi,
+        payload.pred_latitude_value,
+        payload.pred_longitude_value,
+        payload.anomaly_score,
     )
 
 

@@ -59,7 +59,7 @@ async def fetch_history(mmsi: int) -> list[dict]:
 
 
 def save_prediction(db: Session, mmsi: int, pred_lat: float, pred_lon: float, anomaly_score: float):
-    log = models.PredictionsLog(  # 👈 Correction ici (PredictionsLog au lieu de PredictionLog)
+    log = models.PredictionsLog(
         mmsi=mmsi,
         pred_latitude=pred_lat,
         pred_longitude=pred_lon,
@@ -74,8 +74,6 @@ def save_prediction(db: Session, mmsi: int, pred_lat: float, pred_lon: float, an
 async def notify_alert_service(mmsi: int, pred_lat: float, pred_lon: float, anomaly_score: float):
     """
     Envoie le résultat de prédiction à alert-service (fire and forget).
-    prediction-service n'attend pas et n'utilise pas la réponse d'alert-service :
-    c'est alert-service qui décide seul de créer ou non une alerte.
     """
     async with httpx.AsyncClient(timeout=10.0) as client:
         try:
@@ -83,20 +81,19 @@ async def notify_alert_service(mmsi: int, pred_lat: float, pred_lon: float, anom
                 f"{ALERT_SERVICE_URL}/alerts/evaluate",
                 json={
                     "mmsi": mmsi,
-                    "pred_latitude": pred_lat,
-                    "pred_longitude": pred_lon,
+                    "predicted_lat_t30": pred_lat,
+                    "predicted_lon_t30": pred_lon,
                     "anomaly_score": anomaly_score
                 },
                 headers={"X-Internal-Secret": INTERNAL_SECRET}
             )
         except httpx.RequestError:
-            # alert-service injoignable : on ignore, ça ne doit pas faire échouer la prédiction
             pass
 
 
 def list_predictions_by_mmsi(db: Session, mmsi: int, limit: int = 10):
     return (
-        db.query(models.PredictionsLog)  # 👈 Correction ici aussi pour l'historique
+        db.query(models.PredictionsLog)
         .filter(models.PredictionsLog.mmsi == mmsi)
         .order_by(models.PredictionsLog.created_at.desc())
         .limit(limit)
@@ -110,7 +107,7 @@ async def predict_and_process(db: Session, mmsi: int):
     1. Récupère l'historique du navire
     2. Prédit (lat_t30, lon_t30, anomaly_score)
     3. Sauvegarde le résultat dans prediction_log
-    4. Notifie alert-service (sans attendre ni utiliser sa réponse)
+    4. Notifie alert-service avec le bon payload JSON
     5. Retourne uniquement le résultat de la prédiction
     """
     history = await fetch_history(mmsi)
@@ -122,7 +119,7 @@ async def predict_and_process(db: Session, mmsi: int):
     anomaly_score = round(float(prediction[2]), 3)
 
     save_prediction(db, mmsi, predicted_lat_t30, predicted_lon_t30, anomaly_score)
-    await notify_alert_service(mmsi, predicted_lat_t30, predicted_lat_t30, anomaly_score)
+    await notify_alert_service(mmsi, predicted_lat_t30, predicted_lon_t30, anomaly_score)
 
     return {
         "mmsi": mmsi,
