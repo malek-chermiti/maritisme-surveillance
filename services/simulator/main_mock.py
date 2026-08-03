@@ -21,12 +21,14 @@ PUBLISH_INTERVAL_SECONDS = 10
 # Relit la zone active depuis la DB toutes les N publications
 ZONE_REFRESH_EVERY_N_TICKS = 6  # ~1min si PUBLISH_INTERVAL_SECONDS = 10
 
+DEGASSING_MMSI = 672123456
+
 VESSELS = [
-    {"mmsi": 672123456, "lat": None, "lon": None, "heading": random.uniform(0, 360)},
-    {"mmsi": 672123457, "lat": None, "lon": None, "heading": random.uniform(0, 360)},
-    {"mmsi": 672123458, "lat": None, "lon": None, "heading": random.uniform(0, 360)},
-    {"mmsi": 672123459, "lat": None, "lon": None, "heading": random.uniform(0, 360)},
-    {"mmsi": 672123460, "lat": None, "lon": None, "heading": random.uniform(0, 360)},
+    {"mmsi": DEGASSING_MMSI, "lat": None, "lon": None, "heading": random.uniform(0, 360), "simulate_degassing": True},
+    {"mmsi": 672123457, "lat": None, "lon": None, "heading": random.uniform(0, 360), "simulate_degassing": False},
+    {"mmsi": 672123458, "lat": None, "lon": None, "heading": random.uniform(0, 360), "simulate_degassing": False},
+    {"mmsi": 672123459, "lat": None, "lon": None, "heading": random.uniform(0, 360), "simulate_degassing": False},
+    {"mmsi": 672123460, "lat": None, "lon": None, "heading": random.uniform(0, 360), "simulate_degassing": False},
 ]
 
 
@@ -48,9 +50,18 @@ def init_vessel_positions(zone):
 
 
 def move_vessel(vessel, zone):
-    step = 0.01
-    vessel["heading"] += random.uniform(-15, 15)
-    vessel["heading"] %= 360
+    simulate_degassing = vessel.get("simulate_degassing", False)
+
+    if simulate_degassing:
+        vessel["heading"] += random.uniform(-40, 40)
+        vessel["heading"] %= 360
+        speed = round(random.uniform(0.5, 4), 2)
+        step = 0.001
+    else:
+        vessel["heading"] += random.uniform(-15, 15)
+        vessel["heading"] %= 360
+        speed = round(random.uniform(5, 20), 2)
+        step = 0.01
 
     rad = math.radians(vessel["heading"])
     new_lat = vessel["lat"] + step * math.cos(rad)
@@ -66,7 +77,6 @@ def move_vessel(vessel, zone):
     else:
         vessel["lon"] = new_lon
 
-    speed = round(random.uniform(5, 20), 2)
     return speed
 
 
