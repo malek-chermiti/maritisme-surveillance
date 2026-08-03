@@ -48,10 +48,10 @@ def evaluate_prediction(db: Session, mmsi: int, pred_lat: float, pred_lon: float
 
     is_degassing = anomaly_score >= ANOMALY_THRESHOLD
 
-    # Détermine alert_reason et alert_level
+  # Détermine alert_reason et alert_level
     if is_intrusion and is_degassing:
         alert_reason = "LES_DEUX"
-        alert_level = "HIGH"
+        alert_level = "CRITICAL"  # Remplacé "HIGH" par "CRITICAL" (ou une autre valeur acceptée par votre base)
     elif is_intrusion:
         alert_reason = "INTRUSION"
         alert_level = "MEDIUM"
@@ -65,7 +65,7 @@ def evaluate_prediction(db: Session, mmsi: int, pred_lat: float, pred_lon: float
     alert_created = alert_reason is not None
 
     if alert_created:
-        alert = models.Alert(
+        alert = models.Alerts(
             mmsi=mmsi,
             zone_id=zone_id,
             alert_level=alert_level,
@@ -88,8 +88,8 @@ def evaluate_prediction(db: Session, mmsi: int, pred_lat: float, pred_lon: float
 
 def list_alerts(db: Session, limit: int = 50):
     return (
-        db.query(models.Alert)
-        .order_by(models.Alert.created_at.desc())
+        db.query(models.Alerts)
+        .order_by(models.Alerts.created_at.desc())
         .limit(limit)
         .all()
     )
@@ -97,9 +97,9 @@ def list_alerts(db: Session, limit: int = 50):
 
 def list_alerts_by_mmsi(db: Session, mmsi: int, limit: int = 20):
     return (
-        db.query(models.Alert)
-        .filter(models.Alert.mmsi == mmsi)
-        .order_by(models.Alert.created_at.desc())
+        db.query(models.Alerts)
+        .filter(models.Alerts.mmsi == mmsi)
+        .order_by(models.Alerts.created_at.desc())
         .limit(limit)
         .all()
     )
