@@ -44,7 +44,7 @@ class EvaluateResponse(BaseModel):
 class AlertOut(BaseModel):
     id: int
     mmsi: int
-    zone_id: int | None
+    zone_name: str | None
     alert_level: str
     distance_km: float | None
     anomaly_score: float | None

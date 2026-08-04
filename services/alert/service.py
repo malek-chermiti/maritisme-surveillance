@@ -7,13 +7,9 @@ ANOMALY_THRESHOLD = 0.5
 
 
 def find_nearest_zone(db: Session, lat: float, lon: float):
-    """
-    Trouve la zone protégée la plus proche et sa distance en km,
-    en utilisant l'extension PostgreSQL earthdistance.
-    """
     result = db.execute(
         text("""
-            SELECT id, name, center_lat, center_lon, radius_km,
+            SELECT name, center_lat, center_lon, radius_km,
                    earth_distance(
                        ll_to_earth(center_lat, center_lon),
                        ll_to_earth(:lat, :lon)
@@ -27,7 +23,6 @@ def find_nearest_zone(db: Session, lat: float, lon: float):
 
     return result
 
-
 def evaluate_prediction(db: Session, mmsi: int, pred_lat: float, pred_lon: float, anomaly_score: float):
     """
     Évalue une prédiction : calcule la distance à la zone protégée la plus proche,
@@ -37,11 +32,9 @@ def evaluate_prediction(db: Session, mmsi: int, pred_lat: float, pred_lon: float
 
     is_intrusion = False
     distance_km = None
-    zone_id = None
     zone_name = None
 
     if nearest_zone is not None:
-        zone_id = nearest_zone.id
         zone_name = nearest_zone.name
         distance_km = round(nearest_zone.distance_km, 3)
         is_intrusion = distance_km < nearest_zone.radius_km
@@ -67,7 +60,7 @@ def evaluate_prediction(db: Session, mmsi: int, pred_lat: float, pred_lon: float
     if alert_created:
         alert = models.Alerts(
             mmsi=mmsi,
-            zone_id=zone_id,
+            zone_name=zone_name,
             alert_level=alert_level,
             distance_km=distance_km,
             anomaly_score=anomaly_score,
