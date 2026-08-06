@@ -26,7 +26,7 @@ export interface ValidateResponse {
 })
 export class AuthService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8004';
+  private readonly apiUrl = 'http://localhost:8000/api/auth';
 
   login(payload: LoginPayload): Observable<AuthResponse> {
     return this.http

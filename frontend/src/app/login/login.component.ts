@@ -37,6 +37,7 @@ export class LoginComponent {
 
     this.authService.login(payload).subscribe({
       next: () => {
+        alert('Login avec succès');
         this.router.navigate(['/']);
       },
       error: (error) => {
