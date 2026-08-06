@@ -17,6 +17,14 @@ __pycache__/
 *.log
 *.sqlite3
 
+# Frontend Angular / Node
+frontend/
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/coverage/
+frontend/.vscode/
+
 # Fichiers système et IDE
 .DS_Store
 .vscode/
