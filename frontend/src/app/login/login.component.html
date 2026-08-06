@@ -1,0 +1,64 @@
+<div class="auth-page">
+  <section class="hero-block">
+    <div class="hero-brand">
+      <span class="brand-badge">MARITIME ESG</span>
+      <span class="brand-subtitle">COASTAL WATCH · TUNISIA</span>
+    </div>
+    <h1>Surveiller, prédire et protéger les eaux tunisiennes.</h1>
+    <p>Suivi AIS temps réel, projection de trajectoire à 30 minutes et alertes d'intrusion.</p>
+    <div class="hero-footer">
+      <div>
+        <strong>1,284</strong>
+        <span>Navires suivis</span>
+      </div>
+      <div>
+        <strong>98.4%</strong>
+        <span>Précision IA</span>
+      </div>
+      <div>
+        <strong>4</strong>
+        <span>Aires protégées</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-block">
+    <div class="tab-bar">
+      <a routerLink="/login" class="tab active">Connexion</a>
+      <a routerLink="/signup" class="tab">Créer un compte</a>
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
+      <h2>Accéder au centre de veille</h2>
+      <p>Identifiez-vous pour ouvrir la surveillance en temps réel.</p>
+
+      <label>
+        Email
+        <input type="email" formControlName="email" placeholder="operateur@maritime-esg.tn" />
+      </label>
+      <div class="field-error" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+        <span *ngIf="loginForm.get('email')?.errors?.['required']">L’email est requis.</span>
+        <span *ngIf="loginForm.get('email')?.errors?.['email']">Format d’email invalide.</span>
+      </div>
+
+      <label>
+        Mot de passe
+        <input type="password" formControlName="password" placeholder="••••••••" />
+      </label>
+      <div class="field-error" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+        <span *ngIf="loginForm.get('password')?.errors?.['required']">Le mot de passe est requis.</span>
+        <span *ngIf="loginForm.get('password')?.errors?.['minlength']">8 caractères minimum.</span>
+      </div>
+
+      <button type="submit" [disabled]="loginForm.invalid || isSubmitting">
+        {{ isSubmitting ? 'Connexion...' : 'Se connecter' }}
+      </button>
+
+      <div class="error-banner" *ngIf="errorMessage">{{ errorMessage }}</div>
+      <p class="switch-link">
+        Pas encore de compte ?
+        <a routerLink="/signup">Créer un compte</a>
+      </p>
+    </form>
+  </section>
+</div>

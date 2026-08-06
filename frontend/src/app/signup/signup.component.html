@@ -1,0 +1,80 @@
+<div class="auth-page">
+  <section class="hero-block">
+    <div class="hero-brand">
+      <span class="brand-badge">MARITIME ESG</span>
+      <span class="brand-subtitle">COASTAL WATCH · TUNISIA</span>
+    </div>
+    <h1>Surveiller, prédire et protéger les eaux tunisiennes.</h1>
+    <p>Suivi AIS temps réel, projection de trajectoire à 30 minutes et alertes d'intrusion.</p>
+    <div class="hero-footer">
+      <div>
+        <strong>1,284</strong>
+        <span>Navires suivis</span>
+      </div>
+      <div>
+        <strong>98.4%</strong>
+        <span>Précision IA</span>
+      </div>
+      <div>
+        <strong>4</strong>
+        <span>Aires protégées</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-block">
+    <div class="tab-bar">
+      <a routerLink="/login" class="tab">Connexion</a>
+      <a routerLink="/signup" class="tab active">Créer un compte</a>
+    </div>
+
+    <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="auth-form">
+      <h2>Créer un compte</h2>
+      <p>Renseignez vos informations d'opérateur.</p>
+
+      <label>
+        Nom d'utilisateur
+        <input type="text" formControlName="username" placeholder="a.benali" />
+      </label>
+      <div class="field-error" *ngIf="signupForm.get('username')?.invalid && signupForm.get('username')?.touched">
+        <span *ngIf="signupForm.get('username')?.errors?.['required']">Le nom d'utilisateur est requis.</span>
+        <span *ngIf="signupForm.get('username')?.errors?.['minlength']">3 caractères minimum.</span>
+      </div>
+
+      <label>
+        Email
+        <input type="email" formControlName="email" placeholder="a.benali@maritime-esg.tn" />
+      </label>
+      <div class="field-error" *ngIf="signupForm.get('email')?.invalid && signupForm.get('email')?.touched">
+        <span *ngIf="signupForm.get('email')?.errors?.['required']">L’email est requis.</span>
+        <span *ngIf="signupForm.get('email')?.errors?.['email']">Format d’email invalide.</span>
+      </div>
+
+      <label>
+        Rôle
+        <select formControlName="role">
+          <option *ngFor="let role of roles" [value]="role">{{ role }}</option>
+        </select>
+      </label>
+
+      <label>
+        Mot de passe
+        <input type="password" formControlName="password" placeholder="8 caractères minimum" />
+      </label>
+      <div class="field-error" *ngIf="signupForm.get('password')?.invalid && signupForm.get('password')?.touched">
+        <span *ngIf="signupForm.get('password')?.errors?.['required']">Le mot de passe est requis.</span>
+        <span *ngIf="signupForm.get('password')?.errors?.['minlength']">8 caractères minimum.</span>
+      </div>
+
+      <button type="submit" [disabled]="signupForm.invalid || isSubmitting">
+        {{ isSubmitting ? 'Création en cours...' : 'Créer le compte' }}
+      </button>
+
+      <div class="error-banner" *ngIf="errorMessage">{{ errorMessage }}</div>
+      <p class="switch-link">
+        Déjà inscrit ?
+        <a routerLink="/login">Se connecter</a>
+      </p>
+    </form>
+  </section>
+</div>
