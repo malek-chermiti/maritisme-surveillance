@@ -1,25 +1,14 @@
 <div class="auth-page">
   <section class="hero-block">
     <div class="hero-brand">
-      <span class="brand-badge">MARITIME ESG</span>
-      <span class="brand-subtitle">COASTAL WATCH · TUNISIA</span>
+      <span class="brand-badge">Maritimse Surveillnce</span>
+      <span class="brand-subtitle">COASTAL WATCH </span>
     </div>
-    <h1>Surveiller, prédire et protéger les eaux tunisiennes.</h1>
-    <p>Suivi AIS temps réel, projection de trajectoire à 30 minutes et alertes d'intrusion.</p>
-    <div class="hero-footer">
-      <div>
-        <strong>1,284</strong>
-        <span>Navires suivis</span>
-      </div>
-      <div>
-        <strong>98.4%</strong>
-        <span>Précision IA</span>
-      </div>
-      <div>
-        <strong>4</strong>
-        <span>Aires protégées</span>
-      </div>
-    </div>
+    <h1>Surveiller, prédire et protéger</h1>
+    <h2>Suivi AIS temps réel, projection de trajectoire à 30 minutes et alertes d'intrusion.</h2>
+    <figure class="intrusion-visual">
+      <img src="/assets/intrusion.png" alt="Illustration intrusion maritime" />
+    </figure>
   </section>
 
   <section class="form-block">
@@ -43,7 +32,7 @@
 
       <label>
         Email
-        <input type="email" formControlName="email" placeholder="a.benali@maritime-esg.tn" />
+        <input type="email" formControlName="email" placeholder="a.benali@maritime.tn" />
       </label>
       <div class="field-error" *ngIf="signupForm.get('email')?.invalid && signupForm.get('email')?.touched">
         <span *ngIf="signupForm.get('email')?.errors?.['required']">L’email est requis.</span>
