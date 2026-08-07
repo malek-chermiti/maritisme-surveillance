@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { BehaviorSubject, Observable, switchMap, tap } from 'rxjs';
 
 export interface LoginPayload {
   email: string;
@@ -21,17 +21,38 @@ export interface ValidateResponse {
   valid: boolean;
 }
 
+// Définissez ou importez l'interface de votre utilisateur (selon votre modèle backend)
+export interface UserProfile {
+  id: number;
+  username: string;
+  email: string;
+  role: string;
+  [key: string]: any;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = 'http://localhost:8000/api/auth';
+  private readonly baseUrl = 'http://localhost:8000/api/';
 
-  login(payload: LoginPayload): Observable<AuthResponse> {
-    return this.http
-      .post<AuthResponse>(`${this.apiUrl}/login`, payload)
-      .pipe(tap((response) => this.setAuthTokens(response)));
+  private currentUserSubject = new BehaviorSubject<UserProfile | null>(null);
+  public readonly currentUser$ = this.currentUserSubject.asObservable();
+
+  login(payload: LoginPayload): Observable<UserProfile> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, payload).pipe(
+      tap((response) => this.setAuthTokens(response)),
+      switchMap((authResponse) =>
+        this.http.get<UserProfile>(`${this.baseUrl}users/users/${authResponse.user_id}`).pipe(
+          tap((user) => {
+            this.currentUserSubject.next(user);
+            console.log('Utilisateur connecté et stocké dans le BehaviorSubject :', user);
+          })
+        )
+      )
+    );
   }
 
   refresh(refreshToken: string): Observable<RefreshResponse> {
@@ -52,6 +73,7 @@ export class AuthService {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user_id');
+    this.currentUserSubject.next(null);
   }
 
   get accessToken(): string | null {
