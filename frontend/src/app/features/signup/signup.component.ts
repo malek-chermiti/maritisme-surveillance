@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { UserService } from '../services/user.service';
+import { SignupService } from './signup.service';
 
 @Component({
   selector: 'app-signup',
@@ -13,7 +13,7 @@ import { UserService } from '../services/user.service';
 })
 export class SignupComponent {
   private readonly fb = inject(FormBuilder);
-  private readonly userService = inject(UserService);
+  private readonly signupService = inject(SignupService);
   private readonly router = inject(Router);
 
   signupForm = this.fb.group({
@@ -43,7 +43,7 @@ export class SignupComponent {
       password: string;
     };
 
-    this.userService.signup(payload).subscribe({
+    this.signupService.signup(payload).subscribe({
       next: () => {
         this.router.navigate(['/login']);
       },

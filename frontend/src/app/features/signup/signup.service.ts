@@ -12,7 +12,7 @@ export interface SignupPayload {
 @Injectable({
   providedIn: 'root'
 })
-export class UserService {
+export class SignupService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = 'http://localhost:8000/api/users';
 
