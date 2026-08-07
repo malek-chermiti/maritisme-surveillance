@@ -16,6 +16,8 @@ export class SignupComponent {
   private readonly signupService = inject(SignupService);
   private readonly router = inject(Router);
 
+  showPassword = false;
+
   signupForm = this.fb.group({
     username: ['', [Validators.required, Validators.minLength(3)]],
     email: ['', [Validators.required, Validators.email]],
@@ -26,6 +28,10 @@ export class SignupComponent {
   errorMessage = '';
   isSubmitting = false;
   roles = ['Operateur', 'Administrateur'];
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
 
   onSubmit(): void {
     if (this.signupForm.invalid) {
