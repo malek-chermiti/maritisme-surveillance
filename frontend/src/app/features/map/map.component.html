@@ -1,0 +1,9 @@
+<div class="map-page">
+  <div class="map-header">
+    <h2>Zone de surveillance</h2>
+    <p>Dessinez un rectangle sur la carte pour définir la zone active.</p>
+    <span *ngIf="statusMessage" class="status-badge" [class.saving]="isSaving">{{ statusMessage }}</span>
+  </div>
+
+  <div id="map" class="map-container"></div>
+</div>
