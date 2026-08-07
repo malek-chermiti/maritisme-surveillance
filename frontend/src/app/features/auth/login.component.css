@@ -16,8 +16,15 @@
 }
 
 .hero-block {
-  background: linear-gradient(180deg, #0f172a 0%, #0f172a 47%, #eef2ff 100%);
+  background:
+    linear-gradient(rgba(15, 23, 42, 0.6), rgba(15, 23, 42, 0.8)),
+    url('/assets/97061_Disney-Treasure-Exterior-2-1-1.avif') center/cover no-repeat;
   color: white;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .hero-brand {
@@ -56,22 +63,6 @@
   max-width: 560px;
   color: rgba(255, 255, 255, 0.78);
   line-height: 1.7;
-}
-
-.intrusion-visual {
-  margin: 28px 0 0;
-  max-width: 100%;
-}
-
-.intrusion-visual img {
-  display: block;
-  width: 100%;
-  max-width: 420px;
-  height: auto;
-  border-radius: 24px;
-  object-fit: cover;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.28);
-  border: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .hero-footer {
@@ -204,9 +195,5 @@ button:disabled {
 @media (max-width: 960px) {
   .auth-page {
     grid-template-columns: 1fr;
-  }
-
-  .intrusion-visual img {
-    max-width: 100%;
   }
 }
