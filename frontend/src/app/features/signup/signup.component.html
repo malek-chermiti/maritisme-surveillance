@@ -39,6 +39,7 @@
       <label>
         Rôle
         <select formControlName="role">
+          <option value="" disabled selected>Sélectionner votre rôle</option>
           <option *ngFor="let role of roles" [value]="role">{{ role }}</option>
         </select>
       </label>
