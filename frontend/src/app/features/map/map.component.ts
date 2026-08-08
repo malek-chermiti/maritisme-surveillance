@@ -1,13 +1,14 @@
 import { Component, AfterViewInit, OnDestroy, Inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { IngestionService, ZoneBounds } from '../../core/services/ingestion.service';
+import { ZoneDialogComponent } from './zone-dialog/zone-dialog.component';
 
 declare const L: any; // use global Leaflet loaded via angular.json scripts
 
 @Component({
   selector: 'app-map',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ZoneDialogComponent],
   templateUrl: './map.component.html',
   styleUrls: ['./map.component.css']
 })
@@ -18,6 +19,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   statusMessage = '';
   isSaving = false;
+  showDialog = false;
+  dialogZone: ZoneBounds | null = null;
 
   constructor(
     private ingestionService: IngestionService,
@@ -115,6 +118,29 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     };
 
     this.saveZone(zone);
+    this.dialogZone = zone;
+    this.showDialog = true;
+  }
+
+  closeDialog(): void {
+    this.showDialog = false;
+  }
+
+  openZoneDetails(): void {
+    if (this.dialogZone) {
+      this.showDialog = true;
+      return;
+    }
+
+    this.ingestionService.getZone().subscribe({
+      next: (zone) => {
+        this.dialogZone = zone;
+        this.showDialog = true;
+      },
+      error: () => {
+        this.statusMessage = 'Aucune zone existante trouvée.';
+      }
+    });
   }
 
   private saveZone(zone: ZoneBounds): void {
