@@ -44,7 +44,7 @@ export class LoginComponent {
     this.authService.login(payload).subscribe({
       next: () => {
         alert('Login avec succès');
-        this.router.navigate(['/']);
+        this.router.navigate(['/map']);
       },
       error: (error) => {
         this.errorMessage = error?.error?.detail || 'Échec de la connexion. Vérifiez vos identifiants.';

@@ -2,6 +2,8 @@ import { Component, AfterViewInit, OnDestroy, Inject, PLATFORM_ID } from '@angul
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { IngestionService, ZoneBounds } from '../../core/services/ingestion.service';
 
+declare const L: any; // use global Leaflet loaded via angular.json scripts
+
 @Component({
   selector: 'app-map',
   standalone: true,
@@ -24,16 +26,13 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.isBrowser = isPlatformBrowser(platformId);
   }
 
-  async ngAfterViewInit(): Promise<void> {
+  ngAfterViewInit(): void {
     if (!this.isBrowser) {
       return;
     }
 
-    const L = await import('leaflet');
-    await import('leaflet-draw');
-
-    this.initMap(L);
-    this.loadExistingZone(L);
+    this.initMap();
+    this.loadExistingZone();
   }
 
   ngOnDestroy(): void {
@@ -42,7 +41,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private initMap(L: any): void {
+  private initMap(): void {
     this.map = L.map('map').setView([35.0, 10.0], 7);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -52,7 +51,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.drawnItems = new L.FeatureGroup();
     this.map.addLayer(this.drawnItems);
 
-    const drawControl = new (L.Control as any).Draw({
+    const drawControl = new L.Control.Draw({
       draw: {
         rectangle: true,
         polygon: false,
@@ -67,14 +66,14 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     });
     this.map.addControl(drawControl);
 
-    this.map.on((L as any).Draw.Event.CREATED, (event: any) => {
+    this.map.on(L.Draw.Event.CREATED, (event: any) => {
       this.drawnItems.clearLayers();
       const layer = event.layer;
       this.drawnItems.addLayer(layer);
       this.onZoneDrawn(layer);
     });
 
-    this.map.on((L as any).Draw.Event.EDITED, (event: any) => {
+    this.map.on(L.Draw.Event.EDITED, (event: any) => {
       const layers = event.layers;
       layers.eachLayer((layer: any) => {
         this.onZoneDrawn(layer);
@@ -82,10 +81,10 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  private loadExistingZone(L: any): void {
+  private loadExistingZone(): void {
     this.ingestionService.getZone().subscribe({
       next: (zone) => {
-        this.drawZoneOnMap(L, zone);
+        this.drawZoneOnMap(zone);
       },
       error: () => {
         this.statusMessage = 'Aucune zone existante trouvée.';
@@ -93,7 +92,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  private drawZoneOnMap(L: any, zone: ZoneBounds): void {
+  private drawZoneOnMap(zone: ZoneBounds): void {
     const bounds = L.latLngBounds(
       [zone.lat_min, zone.lon_min],
       [zone.lat_max, zone.lon_max]
