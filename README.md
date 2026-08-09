@@ -136,3 +136,53 @@ ng serve
 Accès : `http://localhost:4200`
 
 ## Supervision (Consul)
+Affiche l'état (healthy/unhealthy) de tous les microservices enregistrés.
+
+## Endpoints principaux (via la gateway)
+
+Toutes les requêtes passent par `http://localhost:8000/api/{service}/...`, avec le header `Authorization: Bearer <token>` (sauf routes publiques).
+
+### Authentification (public)
+
+| Méthode | Endpoint | Description |
+|---|---|---|
+| POST | `/api/auth/login` | Connexion, retourne access_token + refresh_token |
+| POST | `/api/auth/refresh` | Renouvelle un access_token |
+| POST | `/api/users/users` | Création de compte (public) |
+
+### Ingestion
+
+| Méthode | Endpoint | Description |
+|---|---|---|
+| GET | `/api/ingestion/vessels/{mmsi}/history` | Historique récent d'un navire |
+| GET | `/api/ingestion/vessels/zone` | Zone de simulation active |
+| PUT | `/api/ingestion/vessels/zone` | Met à jour la zone de simulation |
+
+### Prédiction
+
+| Méthode | Endpoint | Description |
+|---|---|---|
+| POST | `/api/prediction/predict/{mmsi}` | Lance une prédiction pour un navire |
+| GET | `/api/prediction/predictions/{mmsi}` | Historique des prédictions |
+
+### Alertes
+
+| Méthode | Endpoint | Description |
+|---|---|---|
+| GET | `/api/alert/alerts` | Toutes les alertes récentes |
+| GET | `/api/alert/alerts/zone?lat=<lat>&lon=<lon>` | Alertes de la zone protégée la plus proche |
+| GET | `/api/alert/alerts/{mmsi}` | Alertes pour un navire spécifique |
+
+## Tests
+
+Une collection Postman est utilisée pour valider chaque endpoint (login → predict → alert). Voir le dossier `docs/postman/` si exporté.
+
+## Stack technique
+
+- **Backend** : Python, FastAPI, SQLAlchemy 2.0, psycopg
+- **ML** : Scikit-learn (Random Forest multi-output)
+- **Messagerie** : Apache Kafka
+- **Base de données** : PostgreSQL 17 (pattern database-per-service)
+- **Auth** : JWT (python-jose), bcrypt
+- **Frontend** : Angular, Leaflet + Leaflet.draw
+- **Supervision** : Consul
