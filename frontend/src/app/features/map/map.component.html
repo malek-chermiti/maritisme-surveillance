@@ -11,6 +11,19 @@
     </div>
   </div>
 
-  <div id="map" class="map-container"></div>
+  <div class="map-body">
+    <div class="map-content">
+      <div id="map" class="map-container"></div>
+    </div>
+
+    <div class="sidebar-panel">
+      <app-alert-sidebar
+        [alerts]="alerts"
+        [zoneName]="selectedZoneLabel"
+        (loadAlerts)="reloadAlerts()"
+      ></app-alert-sidebar>
+    </div>
+  </div>
+
   <app-zone-dialog *ngIf="showDialog && dialogZone" [zone]="dialogZone" (closeDialog)="closeDialog()"></app-zone-dialog>
 </div>

@@ -63,7 +63,28 @@
   color: #854d0e;
 }
 
-.map-container {
+.map-body {
+  display: flex;
   flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.map-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.map-container {
   width: 100%;
+  height: calc(100vh - 86px);
+}
+
+.sidebar-panel {
+  width: 380px;
+  min-width: 320px;
+  background: #0b1120;
+  border-left: 1px solid rgba(148, 163, 184, 0.16);
+  overflow-y: auto;
 }

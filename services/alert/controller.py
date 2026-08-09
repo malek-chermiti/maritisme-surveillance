@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from security.internal_auth import verify_internal_secret
-from service import evaluate_prediction, list_alerts, list_alerts_by_mmsi
+from service import evaluate_prediction, list_alerts, list_alerts_by_zone, list_alerts_by_mmsi
 import schemas
 
 router = APIRouter(dependencies=[Depends(verify_internal_secret)])
@@ -29,6 +29,12 @@ def evaluate(payload: schemas.EvaluateRequest, db: Session = Depends(get_db)):
 def get_all_alerts(limit: int = 50, db: Session = Depends(get_db)):
     """Liste toutes les alertes récentes (pour consultation/frontend)."""
     return list_alerts(db, limit)
+
+
+@router.get("/alerts/zone", response_model=list[schemas.AlertOut])
+def get_alerts_by_zone(lat: float, lon: float, limit: int = 50, db: Session = Depends(get_db)):
+    """Liste les alertes pour la zone protégée la plus proche d’un point donné."""
+    return list_alerts_by_zone(db, lat, lon, limit)
 
 
 @router.get("/alerts/{mmsi}", response_model=list[schemas.AlertOut])

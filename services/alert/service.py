@@ -96,3 +96,17 @@ def list_alerts_by_mmsi(db: Session, mmsi: int, limit: int = 20):
         .limit(limit)
         .all()
     )
+
+
+def list_alerts_by_zone(db: Session, lat: float, lon: float, limit: int = 50):
+    nearest_zone = find_nearest_zone(db, lat, lon)
+    if nearest_zone is None:
+        return []
+
+    return (
+        db.query(models.Alerts)
+        .filter(models.Alerts.zone_name == nearest_zone.name)
+        .order_by(models.Alerts.created_at.desc())
+        .limit(limit)
+        .all()
+    )

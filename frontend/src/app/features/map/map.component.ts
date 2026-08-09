@@ -1,14 +1,16 @@
 import { Component, AfterViewInit, OnDestroy, Inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { IngestionService, ZoneBounds } from '../../core/services/ingestion.service';
+import { AlertService, AlertItem } from '../../core/services/alert.service';
 import { ZoneDialogComponent } from './zone-dialog/zone-dialog.component';
+import { AlertSidebarComponent } from '../alert/alert-sidebar.component';
 
 declare const L: any; // use global Leaflet loaded via angular.json scripts
 
 @Component({
   selector: 'app-map',
   standalone: true,
-  imports: [CommonModule, ZoneDialogComponent],
+  imports: [CommonModule, ZoneDialogComponent, AlertSidebarComponent],
   templateUrl: './map.component.html',
   styleUrls: ['./map.component.css']
 })
@@ -21,9 +23,13 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   isSaving = false;
   showDialog = false;
   dialogZone: ZoneBounds | null = null;
+  showSidebar = true;
+  selectedZoneLabel = 'Zone active';
+  alerts: AlertItem[] = [];
 
   constructor(
     private ingestionService: IngestionService,
+    private alertService: AlertService,
     @Inject(PLATFORM_ID) platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
@@ -88,6 +94,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.ingestionService.getZone().subscribe({
       next: (zone) => {
         this.drawZoneOnMap(zone);
+        this.fetchAlertsForZone(zone);
       },
       error: () => {
         this.statusMessage = 'Aucune zone existante trouvée.';
@@ -120,6 +127,36 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.saveZone(zone);
     this.dialogZone = zone;
     this.showDialog = true;
+    this.fetchAlertsForZone(zone);
+  }
+
+  private fetchAlertsForZone(zone: ZoneBounds): void {
+    const centerLat = (zone.lat_min + zone.lat_max) / 2;
+    const centerLon = (zone.lon_min + zone.lon_max) / 2;
+    this.selectedZoneLabel = `Zone sélectionnée`;
+    this.statusMessage = 'Chargement des alertes...';
+    this.showSidebar = true;
+    this.alerts = [];
+
+    this.alertService.getAlertsForZone(centerLat, centerLon).subscribe({
+      next: (alerts) => {
+        this.alerts = alerts;
+        if (this.alerts.length > 0 && this.alerts[0].zone_name) {
+          this.selectedZoneLabel = this.alerts[0].zone_name;
+        }
+        this.statusMessage = this.alerts.length === 0 ? 'Aucune alerte trouvée pour cette zone.' : '';
+      },
+      error: () => {
+        this.statusMessage = 'Erreur lors du chargement des alertes.';
+      }
+    });
+  }
+
+  reloadAlerts(): void {
+    if (!this.dialogZone) {
+      return;
+    }
+    this.fetchAlertsForZone(this.dialogZone);
   }
 
   closeDialog(): void {
