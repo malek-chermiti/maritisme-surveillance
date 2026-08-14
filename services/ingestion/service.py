@@ -1,4 +1,8 @@
-from models import VesselPositions
+try:
+    from .models import VesselPositions
+except ImportError:
+    from models import VesselPositions
+
 from fastapi import HTTPException
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -59,3 +63,17 @@ def get_simulation_zone(db: Session):
         raise HTTPException(status_code=404, detail="Aucune zone de simulation définie")
 
     return {"lat_min": result[0], "lat_max": result[1], "lon_min": result[2], "lon_max": result[3]}
+
+
+def get_vessels_in_zone(db: Session, lat_min: float, lat_max: float, lon_min: float, lon_max: float, limit: int = 200):
+    """Retourne les navires actuellement dans une zone géographique donnée."""
+    return (
+        db.query(VesselPositions)
+        .filter(VesselPositions.latitude >= lat_min)
+        .filter(VesselPositions.latitude <= lat_max)
+        .filter(VesselPositions.longitude >= lon_min)
+        .filter(VesselPositions.longitude <= lon_max)
+        .order_by(VesselPositions.recorded_at.desc())
+        .limit(limit)
+        .all()
+    )

@@ -4,48 +4,41 @@
       <p class="section-label">Zone sélectionnée</p>
       <h3>{{ zoneName || 'Zone active' }}</h3>
     </div>
-    <button class="alerts-btn" (click)="onAlertTabClick()">Alerts</button>
+    <button class="alerts-btn" (click)="onAlertTabClick()">Actualiser</button>
   </div>
 
   <div class="alert-summary" *ngIf="alerts.length; else noAlerts">
-    <p class="summary-text">Alertes de zone</p>
-    <div class="table-wrapper">
-      <table class="alert-table">
-        <thead>
-          <tr>
-            <th>MMSI</th>
-            <th>Niveau</th>
-            <th>Raison</th>
-            <th>Distance</th>
-            <th>Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let alert of alerts">
-            <td>{{ alert.mmsi }}</td>
-            <td><span class="alert-badge" [ngClass]="alert.alert_level.toLowerCase()">{{ alert.alert_level }}</span></td>
-            <td>{{ alert.alert_reason }}</td>
-            <td>{{ alert.distance_km !== null ? (alert.distance_km | number:'1.1-1') + ' km' : '-' }}</td>
-            <td>{{ alert.created_at | date:'short' }}</td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="summary-row">
+      <span class="summary-text">Alertes actives</span>
+      <span class="summary-count">{{ alerts.length }}</span>
+    </div>
+
+    <div class="alert-list">
+      <article class="alert-card" *ngFor="let alert of alerts">
+        <div class="alert-badge" [ngClass]="alert.alert_level.toLowerCase()">{{ alert.alert_level }}</div>
+
+        <div class="alert-content">
+          <div class="alert-line">
+            <span class="alert-title">MMSI {{ alert.mmsi }}</span>
+            <span class="alert-time">{{ alert.created_at | date:'shortTime' }}</span>
+          </div>
+
+          <p class="alert-reason">{{ alert.alert_reason }}</p>
+
+          <div class="alert-meta">
+            <span>{{ alert.distance_km !== null ? (alert.distance_km | number:'1.1-1') + ' km' : 'Distance inconnue' }}</span>
+            <span>•</span>
+            <span>{{ alert.anomaly_score !== null ? (alert.anomaly_score | number:'1.2-2') : 'score n/a' }}</span>
+          </div>
+        </div>
+      </article>
     </div>
   </div>
 
   <ng-template #noAlerts>
     <div class="no-alerts">
-      <p>Aucune alerte dans cette zone pour le moment.</p>
+      <p>Aucune alerte active dans cette zone.</p>
     </div>
   </ng-template>
 
-  <div class="sidebar-footer">
-    <div class="avatar">
-      <span>AM</span>
-    </div>
-    <div class="user-info">
-      <p class="user-name">Alex Morrow</p>
-      <p class="user-role">Maritime Analyst</p>
-    </div>
-  </div>
 </aside>

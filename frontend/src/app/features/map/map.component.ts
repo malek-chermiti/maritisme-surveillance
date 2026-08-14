@@ -1,7 +1,10 @@
 import { Component, AfterViewInit, OnDestroy, Inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { IngestionService, ZoneBounds } from '../../core/services/ingestion.service';
 import { AlertService, AlertItem } from '../../core/services/alert.service';
+import { PredictionService } from '../../core/services/prediction.service';
 import { ZoneDialogComponent } from './zone-dialog/zone-dialog.component';
 import { AlertSidebarComponent } from '../alert/alert-sidebar.component';
 
@@ -30,6 +33,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   constructor(
     private ingestionService: IngestionService,
     private alertService: AlertService,
+    private predictionService: PredictionService,
     @Inject(PLATFORM_ID) platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
@@ -133,14 +137,69 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   private fetchAlertsForZone(zone: ZoneBounds): void {
     const centerLat = (zone.lat_min + zone.lat_max) / 2;
     const centerLon = (zone.lon_min + zone.lon_max) / 2;
-    this.selectedZoneLabel = `Zone sélectionnée`;
-    this.statusMessage = 'Chargement des alertes...';
+    this.selectedZoneLabel = 'Zone sélectionnée';
+    this.statusMessage = 'Recherche des navires dans la zone...';
     this.showSidebar = true;
     this.alerts = [];
 
-    this.alertService.getAlertsForZone(centerLat, centerLon).subscribe({
+    this.ingestionService.getVesselsInZone(zone).subscribe({
+      next: (vessels) => {
+        if (vessels.length === 0) {
+          this.statusMessage = 'Aucun navire dans cette zone.';
+          return;
+        }
+
+        this.statusMessage = `Analyse de ${vessels.length} navire(s)...`;
+
+        const refreshAlertsImmediately = () => {
+          this.loadAlertsForCenter(centerLat, centerLon);
+        };
+
+        vessels.forEach((vessel) => {
+          this.predictionService.predict(vessel.mmsi)
+            .pipe(catchError(() => of(null)))
+            .subscribe({
+              next: refreshAlertsImmediately,
+              error: refreshAlertsImmediately
+            });
+        });
+      },
+      error: () => {
+        this.statusMessage = 'Erreur lors de la récupération des navires.';
+      }
+    });
+  }
+
+  private loadAlertsForCenter(lat: number, lon: number): void {
+    this.statusMessage = 'Chargement des alertes...';
+
+    this.alertService.getAlertsForZone(lat, lon).subscribe({
       next: (alerts) => {
-        this.alerts = alerts;
+        const uniqueAlerts = alerts.filter((alert, index, list) => {
+          const key = [
+            alert.mmsi,
+            alert.zone_name ?? '',
+            alert.alert_level,
+            alert.alert_reason,
+            alert.distance_km ?? '',
+            alert.anomaly_score ?? ''
+          ].join('|');
+
+          return list.findIndex((candidate) => {
+            const candidateKey = [
+              candidate.mmsi,
+              candidate.zone_name ?? '',
+              candidate.alert_level,
+              candidate.alert_reason,
+              candidate.distance_km ?? '',
+              candidate.anomaly_score ?? ''
+            ].join('|');
+
+            return candidateKey === key;
+          }) === index;
+        }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+        this.alerts = uniqueAlerts;
         if (this.alerts.length > 0 && this.alerts[0].zone_name) {
           this.selectedZoneLabel = this.alerts[0].zone_name;
         }

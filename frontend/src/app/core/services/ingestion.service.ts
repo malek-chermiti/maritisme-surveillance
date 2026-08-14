@@ -9,6 +9,15 @@ export interface ZoneBounds {
   lon_max: number;
 }
 
+export interface VesselPosition {
+  mmsi: number;
+  lat: number;
+  lon: number;
+  speed: number;
+  heading: number;
+  recorded_at: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -23,5 +32,15 @@ export class IngestionService {
 
   updateZone(zone: ZoneBounds): Observable<ZoneBounds> {
     return this.http.put<ZoneBounds>(`${this.API_URL}/zone`, zone);
+  }
+
+  getVesselsInZone(zone: ZoneBounds): Observable<VesselPosition[]> {
+    const params = {
+      lat_min: zone.lat_min.toString(),
+      lat_max: zone.lat_max.toString(),
+      lon_min: zone.lon_min.toString(),
+      lon_max: zone.lon_max.toString()
+    };
+    return this.http.get<VesselPosition[]>(`${this.API_URL}/in-zone`, { params });
   }
 }
