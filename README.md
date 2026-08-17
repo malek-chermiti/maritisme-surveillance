@@ -76,14 +76,14 @@ cd frontend && ng serve
 
 | Method | Endpoint | Public | Description |
 |---|---|---|---|
-| POST | `/auth/login` | ✅ | Get access_token + refresh_token |
-| POST | `/auth/refresh` | ❌ | Refresh expired token |
-| POST | `/users/users` | ✅ | Create account |
-| GET | `/ingestion/vessels/{mmsi}/history` | ❌ | Vessel position history |
-| GET/PUT | `/ingestion/vessels/zone` | ❌ | Get/set simulation zone |
-| POST | `/prediction/predict/{mmsi}` | ❌ | Run ML prediction |
-| GET | `/alert/alerts` | ❌ | All alerts |
-| GET | `/alert/alerts/{mmsi}` | ❌ | Alerts for vessel |
+| POST | `/auth/login` |Get access_token + refresh_token |
+| POST | `/auth/refresh` | Refresh expired token |
+| POST | `/users/users` | Create account |
+| GET | `/ingestion/vessels/{mmsi}/history` | Vessel position history |
+| GET/PUT | `/ingestion/vessels/zone` |  Get/set simulation zone |
+| POST | `/prediction/predict/{mmsi}` |  Run ML prediction |
+| GET | `/alert/alerts` |  All alerts |
+| GET | `/alert/alerts/{mmsi}` | Alerts for vessel |
 
 **Swagger docs:** `http://localhost:PORT/docs`
 
